@@ -1,0 +1,3 @@
+﻿<Project>
+  <Import Project="../build/stdiscm-PS3.props" />
+</Project>
