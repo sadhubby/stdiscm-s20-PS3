@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "/home/moonberry/Documents/GitHub/stdiscm-s20-PS3/stdiscm-PS3/stdiscm-PS3.csproj": {}
+    "/home/moonberry/Documents/GitHub/stdiscm-PS3/stdiscm-PS3.csproj": {}
   },
   "projects": {
-    "/home/moonberry/Documents/GitHub/stdiscm-s20-PS3/stdiscm-PS3/stdiscm-PS3.csproj": {
+    "/home/moonberry/Documents/GitHub/stdiscm-PS3/stdiscm-PS3.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/home/moonberry/Documents/GitHub/stdiscm-s20-PS3/stdiscm-PS3/stdiscm-PS3.csproj",
+        "projectUniqueName": "/home/moonberry/Documents/GitHub/stdiscm-PS3/stdiscm-PS3.csproj",
         "projectName": "stdiscm-PS3",
-        "projectPath": "/home/moonberry/Documents/GitHub/stdiscm-s20-PS3/stdiscm-PS3/stdiscm-PS3.csproj",
+        "projectPath": "/home/moonberry/Documents/GitHub/stdiscm-PS3/stdiscm-PS3.csproj",
         "packagesPath": "/home/moonberry/.nuget/packages/",
-        "outputPath": "/home/moonberry/Documents/GitHub/stdiscm-s20-PS3/stdiscm-PS3/obj/",
+        "outputPath": "/home/moonberry/Documents/GitHub/stdiscm-PS3/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "/home/moonberry/.nuget/NuGet/NuGet.Config"

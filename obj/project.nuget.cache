@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "o8zYCTLZ+0U=",
+  "dgSpecHash": "pBE+pI48hx0=",
   "success": true,
-  "projectFilePath": "/home/moonberry/Documents/GitHub/stdiscm-s20-PS3/stdiscm-PS3/stdiscm-PS3.csproj",
+  "projectFilePath": "/home/moonberry/Documents/GitHub/stdiscm-PS3/stdiscm-PS3.csproj",
   "expectedPackageFiles": [
     "/home/moonberry/.nuget/packages/google.protobuf/3.27.0/google.protobuf.3.27.0.nupkg.sha512",
     "/home/moonberry/.nuget/packages/grpc.aspnetcore/2.64.0/grpc.aspnetcore.2.64.0.nupkg.sha512",
