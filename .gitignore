@@ -1,0 +1,26 @@
+# Build and IDE folders
+bin/
+obj/
+.vs/
+*.user
+*.suo
+*.cache
+*.db
+
+# Logs
+*.log
+
+# Visual Studio artifacts
+*.VC.db
+*.VC.opendb
+*.pidb
+
+# NuGet
+*.nupkg
+packages/
+project.lock.json
+project.assets.json
+
+# OS files
+Thumbs.db
+.DS_Store
