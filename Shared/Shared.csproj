@@ -1,0 +1,3 @@
+<ItemGroup>
+	<ProjectReference Include="..\Protos\streaming.proto" />
+</ItemGroup>
