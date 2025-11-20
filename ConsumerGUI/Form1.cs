@@ -8,91 +8,98 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-
 public partial class Form1 : Form
 {
     private List<VideoItem> videos = new List<VideoItem>();
     private Timer previewTimer;
-    private PictureBox currentPreview;
+    private PictureBox currentPreviewBox;
 
     public Form1()
     {
         InitializeComponent();
-        LoadVideos();
+        LoadMockVideos();
         RenderThumbnails();
-        SetupPreviewTimer();
+
+        previewTimer = new Timer();
+        previewTimer.Interval = 300;
+        previewTimer.Tick += PreviewTimerTick;
     }
 
-    private void LoadVideos()
+    private void LoadMockVideos()
     {
         videos.Add(new VideoItem(
             "RivalsAhh.mp4",
-            "C:\\Users\\Nitro 5\\Videos\\MarvelRivals\\Highlights\\RivalsAhh.mp4"));
+            @"C:\Users\Nitro 5\Videos\MarvelRivals\Highlights\RivalsAhh.mp4"
+        ));
     }
 
     private void RenderThumbnails()
     {
         flowPanelVideos.Controls.Clear();
 
-        foreach (var video in videos)
+        foreach (var vid in videos)
         {
-            PictureBox thumb = new PictureBox();
-            thumb.Width = 200;
-            thumb.Height = 120;
-            thumb.BorderStyle = BorderStyle.FixedSingle;
-            thumb.SizeMode = PictureBoxSizeMode.StretchImage;
+            var pb = new PictureBox();
+            pb.Width = 160;
+            pb.Height = 100;
+            pb.SizeMode = PictureBoxSizeMode.StretchImage;
+            pb.BorderStyle = BorderStyle.FixedSingle;
 
-            thumb.Image = Properties.Resources.default_thumb;
-            thumb.Tag = video;
+            // Placeholder image
+            pb.Image = Properties.Resources.default_thumb;
 
-            thumb.MouseHover += ThumbnailHover;
-            thumb.MouseLeave += ThumbnailLeave;
-            thumb.Click += ThumbnailClick;
+            pb.Tag = vid;
 
-            flowPanelVideos.Controls.Add(thumb);
+            pb.MouseHover += ThumbnailMouseHover;
+            pb.MouseLeave += ThumbnailMouseLeave;
+            pb.Click += ThumbnailClick;
+
+            flowPanelVideos.Controls.Add(pb);
         }
     }
 
-    private void SetupPreviewTimer()
-    {
-        previewTimer = new Timer();
-        previewTimer.Interval = 400;
-        previewTimer.Tick += PreviewTick;
-    }
+    // ------- Preview animation on hover --------
 
-    private void ThumbnailHover(object sender, EventArgs e)
+    private int previewFrame = 0;
+
+    private void ThumbnailMouseHover(object sender, EventArgs e)
     {
-        currentPreview = sender as PictureBox;
-        currentPreview.BorderStyle = BorderStyle.Fixed3D;
+        currentPreviewBox = sender as PictureBox;
+        currentPreviewBox.BorderStyle = BorderStyle.Fixed3D;
 
         previewTimer.Start();
     }
 
-    private void ThumbnailLeave(object sender, EventArgs e)
+    private void ThumbnailMouseLeave(object sender, EventArgs e)
     {
         previewTimer.Stop();
-        currentPreview.BackColor = Color.White;
 
         var pb = sender as PictureBox;
         pb.BorderStyle = BorderStyle.FixedSingle;
+
+        pb.Image = Properties.Resources.default_thumb;
     }
 
-    private int frame = 0;
-    private void PreviewTick(object sender, EventArgs e)
+    private void PreviewTimerTick(object sender, EventArgs e)
     {
-        if (currentPreview == null) return;
+        if (currentPreviewBox == null) return;
 
-        frame++;
-        currentPreview.BackColor =
-            (frame % 2 == 0) ? Color.LightGray : Color.White;
+        previewFrame++;
+
+        // simple blinking effect
+        currentPreviewBox.BackColor =
+            (previewFrame % 2 == 0 ? Color.LightGray : Color.White);
     }
+
+    // ------- Click to play video on the right panel --------
 
     private void ThumbnailClick(object sender, EventArgs e)
     {
         var pb = sender as PictureBox;
-        var vid = (VideoItem)pb.Tag;
+        var video = (VideoItem)pb.Tag;
 
-        var player = new VideoPlayerForm(vid.FilePath);
-        player.Show();
+        videoPlayer.URL = video.FilePath;
+        videoPlayer.Ctlcontrols.play();
     }
 }
+

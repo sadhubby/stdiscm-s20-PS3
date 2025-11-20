@@ -1,16 +1,11 @@
-public class VideoItem
+﻿public class VideoItem
 {
     public string FileName { get; }
     public string FilePath { get; }
 
-    public VideoItem(string name, string path)
+    public VideoItem(string fileName, string filePath)
     {
-        FileName = name;
-        FilePath = path;
-    }
-
-    public override string ToString()
-    {
-        return FileName;
+        FileName = fileName;
+        FilePath = filePath;
     }
 }

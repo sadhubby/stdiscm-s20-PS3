@@ -4,11 +4,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{E3349A9C-8AD7-48B0-A72A-3382CF8C960D}</ProjectGuid>
+    <ProjectGuid>{69E65B4B-BCF9-4107-A123-D25B193A5251}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <RootNamespace>ConsumerGUI</RootNamespace>
     <AssemblyName>ConsumerGUI</AssemblyName>
-    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <Deterministic>true</Deterministic>
