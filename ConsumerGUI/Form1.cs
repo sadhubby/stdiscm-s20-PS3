@@ -11,11 +11,13 @@ namespace ConsumerGUI
         private List<VideoItem> videos = new List<VideoItem>();
         private PictureBox currentPreviewBox;
         private AxWMPLib.AxWindowsMediaPlayer hoverPlayer;
+        private Timer previewTimer;
 
         public Form1()
         {
             InitializeComponent();
             InitHoverPlayer();
+            InitPreviewTimer();
             LoadMockVideos();
             RenderThumbnails();
         }
@@ -33,7 +35,6 @@ namespace ConsumerGUI
             videos.Add(new VideoItem("Taboo Gameplay Furnace.mp4", Path.Combine(uploadsPath, "Taboo Gameplay Furnace.mp4")));
         }
 
-
         private void RenderThumbnails()
         {
             flowPanelVideos.Controls.Clear();
@@ -48,11 +49,9 @@ namespace ConsumerGUI
                     Height = 120,
                     SizeMode = PictureBoxSizeMode.StretchImage,
                     BorderStyle = BorderStyle.FixedSingle,
-                    Image = thumbnail,
-                    Tag = vid
+                    Image = thumbnail
                 };
 
-                // store original image!
                 pb.Tag = new ThumbnailInfo(vid.FilePath, thumbnail);
 
                 pb.MouseHover += ThumbnailMouseHover;
@@ -67,12 +66,32 @@ namespace ConsumerGUI
         {
             var pb = (PictureBox)sender;
             var info = (ThumbnailInfo)pb.Tag;
-
             currentPreviewBox = pb;
 
+            ShowPreview(info, pb);
+            previewTimer.Start();
+        }
+
+        private void PreviewTimerTick(object sender, EventArgs e)
+        {
+            if (currentPreviewBox == null)
+                return;
+
+            // prevent flicker by checking real mouse position
+            if (!currentPreviewBox.Bounds.Contains(PointToClient(Cursor.Position)))
+            {
+                StopPreview();
+            }
+        }
+
+        private void ShowPreview(ThumbnailInfo info, PictureBox pb)
+        {
+            if (!File.Exists(info.Path))
+                return;
+
             hoverPlayer.URL = info.Path;
+            hoverPlayer.settings.autoStart = true;
             hoverPlayer.Ctlcontrols.currentPosition = 0;
-            hoverPlayer.Ctlcontrols.play();
 
             hoverPlayer.Bounds = pb.Bounds;
             hoverPlayer.Parent = pb.Parent;
@@ -80,16 +99,24 @@ namespace ConsumerGUI
             hoverPlayer.Visible = true;
         }
 
-        private void ThumbnailMouseLeave(object sender, EventArgs e)
+        private void StopPreview()
         {
-            var pb = (PictureBox)sender;
-            var info = (ThumbnailInfo)pb.Tag;
-
             hoverPlayer.Ctlcontrols.stop();
             hoverPlayer.Visible = false;
 
-            // restore original thumbnail
-            pb.Image = info.Thumbnail;
+            if (currentPreviewBox != null)
+            {
+                var info = (ThumbnailInfo)currentPreviewBox.Tag;
+                currentPreviewBox.Image = info.Thumbnail;
+            }
+
+            previewTimer.Stop();
+            currentPreviewBox = null;
+        }
+
+        private void ThumbnailMouseLeave(object sender, EventArgs e)
+        {
+            // do nothing muna haha
         }
 
         private void ThumbnailClick(object sender, EventArgs e)
@@ -103,18 +130,27 @@ namespace ConsumerGUI
         private void InitHoverPlayer()
         {
             hoverPlayer = new AxWMPLib.AxWindowsMediaPlayer();
-            hoverPlayer.CreateControl();     // IMPORTANT LINE!
+            hoverPlayer.CreateControl();
             hoverPlayer.uiMode = "none";
             hoverPlayer.Visible = false;
             hoverPlayer.settings.mute = true;
-
             this.Controls.Add(hoverPlayer);
+        }
+
+        private void InitPreviewTimer()
+        {
+            previewTimer = new Timer
+            {
+                Interval = 100
+            };
+            previewTimer.Tick += PreviewTimerTick;
         }
 
         private class ThumbnailInfo
         {
             public string Path { get; }
             public Image Thumbnail { get; }
+
             public ThumbnailInfo(string path, Image thumb)
             {
                 Path = path;
