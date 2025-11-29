@@ -794,19 +794,24 @@
     ]
   },
   "packageFolders": {
-    "/home/moonberry/.nuget/packages/": {}
+    "C:\\Users\\Rafael\\.nuget\\packages\\": {},
+    "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/home/moonberry/Documents/GitHub/stdiscm-PS3/stdiscm-PS3.csproj",
+      "projectUniqueName": "c:\\Users\\Rafael\\OneDrive\\Documents\\Code\\STDISCM\\PS3\\stdiscm-PS3\\stdiscm-PS3.csproj",
       "projectName": "stdiscm-PS3",
-      "projectPath": "/home/moonberry/Documents/GitHub/stdiscm-PS3/stdiscm-PS3.csproj",
-      "packagesPath": "/home/moonberry/.nuget/packages/",
-      "outputPath": "/home/moonberry/Documents/GitHub/stdiscm-PS3/obj/",
+      "projectPath": "c:\\Users\\Rafael\\OneDrive\\Documents\\Code\\STDISCM\\PS3\\stdiscm-PS3\\stdiscm-PS3.csproj",
+      "packagesPath": "C:\\Users\\Rafael\\.nuget\\packages\\",
+      "outputPath": "c:\\Users\\Rafael\\OneDrive\\Documents\\Code\\STDISCM\\PS3\\stdiscm-PS3\\obj\\",
       "projectStyle": "PackageReference",
+      "fallbackFolders": [
+        "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+      ],
       "configFilePaths": [
-        "/home/moonberry/.nuget/NuGet/NuGet.Config"
+        "C:\\Users\\Rafael\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config"
       ],
       "originalTargetFrameworks": [
         "net9.0"
@@ -830,7 +835,7 @@
         "auditLevel": "low",
         "auditMode": "direct"
       },
-      "SdkAnalysisLevel": "9.0.100"
+      "SdkAnalysisLevel": "9.0.300"
     },
     "frameworks": {
       "net9.0": {
@@ -852,12 +857,6 @@
         ],
         "assetTargetFallback": true,
         "warn": true,
-        "downloadDependencies": [
-          {
-            "name": "Microsoft.AspNetCore.App.Ref",
-            "version": "[9.0.9, 9.0.9]"
-          }
-        ],
         "frameworkReferences": {
           "Microsoft.AspNetCore.App": {
             "privateAssets": "none"
@@ -866,7 +865,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/9.0.110/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.307/PortableRuntimeIdentifierGraph.json"
       }
     }
   }

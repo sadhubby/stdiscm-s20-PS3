@@ -9,6 +9,10 @@ service VideoUploadService {
   rpc UploadVideo(stream VideoUploadRequest) returns (VideoUploadResponse);
 }
 
+service VideoLibraryService {
+  rpc ListVideos (ListVideosRequest) returns (ListVideosResponse);
+}
+
 message VideoUploadRequest {
   oneof request {
     VideoMetadata metadata = 1;
@@ -28,6 +32,8 @@ message VideoMetadata {
 message VideoUploadResponse {
   bool success = 1;
   string message = 2;
+  string video_id = 3;
+  string playback_url = 4;
 }
 
 // For streaming
@@ -43,6 +49,7 @@ message VideoInfo {
   string file_name = 2;
   int64 size_in_bytes = 3;
   string playback_url = 4;
+  int64 uploaded_utc_unix = 5;
 }
 
 message ListVideosResponse {
