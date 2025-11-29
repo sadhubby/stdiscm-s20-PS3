@@ -22,8 +22,16 @@ namespace ConsumerGUI
             RenderThumbnails();
         }
 
+       
         private void LoadMockVideos()
         {
+            /*@TODO 
+            * Load videos in the video player. 
+            * 
+            * Currently hardcoded to have the videos prepared beforehand in the folder stdiscm-ps3 -> Consumer -> Uploads
+            * Make this not be hardcoded but instead get from producer that will save it in the consumer uploads folder. 
+            * 
+            */
             string uploadsPath = Path.GetFullPath(
                 Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\..\..\Consumer\Uploads")
             );
