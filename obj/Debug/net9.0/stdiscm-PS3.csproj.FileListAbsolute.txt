@@ -74,3 +74,14 @@
 /home/moonberry/Documents/GitHub/stdiscm-PS3/obj/Debug/net9.0/stdiscm-.02D955ED.Up2Date
 /home/moonberry/Documents/GitHub/stdiscm-PS3/obj/Debug/net9.0/stdiscm-PS3.genruntimeconfig.cache
 /home/moonberry/Documents/GitHub/stdiscm-PS3/obj/Debug/net9.0/ref/stdiscm-PS3.dll
+c:\Users\Rafael\OneDrive\Documents\Code\STDISCM\PS3\stdiscm-PS3\obj\Debug\net9.0\stdiscm-PS3.csproj.AssemblyReference.cache
+c:\Users\Rafael\OneDrive\Documents\Code\STDISCM\PS3\stdiscm-PS3\obj\Debug\net9.0\rpswa.dswa.cache.json
+c:\Users\Rafael\OneDrive\Documents\Code\STDISCM\PS3\stdiscm-PS3\obj\Debug\net9.0\stdiscm-PS3.GeneratedMSBuildEditorConfig.editorconfig
+c:\Users\Rafael\OneDrive\Documents\Code\STDISCM\PS3\stdiscm-PS3\obj\Debug\net9.0\stdiscm-PS3.AssemblyInfoInputs.cache
+c:\Users\Rafael\OneDrive\Documents\Code\STDISCM\PS3\stdiscm-PS3\obj\Debug\net9.0\stdiscm-PS3.AssemblyInfo.cs
+c:\Users\Rafael\OneDrive\Documents\Code\STDISCM\PS3\stdiscm-PS3\obj\Debug\net9.0\stdiscm-PS3.csproj.CoreCompileInputs.cache
+c:\Users\Rafael\OneDrive\Documents\Code\STDISCM\PS3\stdiscm-PS3\obj\Debug\net9.0\stdiscm-PS3.MvcApplicationPartsAssemblyInfo.cache
+c:\Users\Rafael\OneDrive\Documents\Code\STDISCM\PS3\stdiscm-PS3\obj\Debug\net9.0\stdiscm-PS3.sourcelink.json
+c:\Users\Rafael\OneDrive\Documents\Code\STDISCM\PS3\stdiscm-PS3\obj\Debug\net9.0\stdiscm-PS3.dll
+c:\Users\Rafael\OneDrive\Documents\Code\STDISCM\PS3\stdiscm-PS3\obj\Debug\net9.0\refint\stdiscm-PS3.dll
+c:\Users\Rafael\OneDrive\Documents\Code\STDISCM\PS3\stdiscm-PS3\obj\Debug\net9.0\stdiscm-PS3.pdb
