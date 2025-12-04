@@ -1,0 +1,124 @@
+CHANGES MADE BY CODING AGENT
+Date: 2025-12-04
+Branch: consumerbranch / consumerbranch-clean (working branch at time of edits)
+
+Purpose
+- Provide a single-file record of all edits I (the coding agent) made across the workspace during the session. Use this file to hand to your future self or to another collaborator who needs to reapply or inspect the changes.
+
+Summary of edits (file-by-file)
+--------------------------------
+1) Producer/Program.cs
+   - Added interactive-first behavior: when run with no args, prompts for
+     - Number of producers (p), consumers (c), max queue (q)
+     - Base folder for producer inputs (with existence check and optional creation)
+     - Consumer server address (validated to start with http:// or https://)
+   - Added a terminal CLI that requires you to explicitly choose "Start producers" after validation.
+   - Added video-extension filtering: only files with these extensions are considered for upload:
+     .mp4, .mkv, .mov, .avi, .wmv, .webm, .mpeg, .mpg, .m4v
+     Non-video files are ignored and left untouched.
+   - Maintains behavior of skipping files that end with `.part` or `.uploaded`.
+   - Retains exponential-backoff + retry on ResourceExhausted / Unavailable or server message containing "full".
+   - After successful upload, the file is marked by renaming with suffix `.uploaded` (current policy).
+   - Added input validation for folder creation and server address format.
+
+2) Producer/Producer.csproj
+   - Small fix earlier to ensure the project file had the correct XML wrapper (Project Sdk) so it builds as an executable.
+
+3) Producer/README.md (updated as README_UPDATED.md)
+   - Created `Producer/README_UPDATED.md` which documents interactive behavior, allowed video extensions, and testing instructions.
+
+4) ProducerTest/MockVideoUploadService.cs
+   - Now: persists uploads to `ProducerTest/uploads` (reconstructs file sizes with zero-filled file when chunks aren't buffered) so uploaded files are visible to you and the GUI team.
+   - Modified queue-full simulation to only fail the first attempt for a given `UploadId` (so retries succeed), and still simulate transient failure to test Producer retry logic.
+
+5) ProducerTest/Program.cs
+   - Hosts the mock server on https://localhost:5001. No functional changes beyond starting the service.
+
+6) Consumer/README.md
+   - Added a detailed implementation guide for the Consumer developer (VideoUploadService.UploadVideo, VideoLibraryService.ListVideos, media endpoint /media/{fileName}, leaky-bucket pattern, file layout, checksum validation, and testing instructions).
+
+7) Protos/streaming.proto
+   - Resolved a duplicate `VideoLibraryService` block that previously caused a build error (duplicate RPC definitions). The duplicate block was removed so the proto compiles cleanly.
+
+Files created
+--------------
+- Consumer/README.md            (implementation guidance for Consumer)
+- Producer/README_UPDATED.md    (temporary, then moved to Producer/README.md)
+- CHANGES_from_agent_2025-12-04.txt  (this file)
+
+Build/run notes and important commands
+--------------------------------------
+- Build just Producer (quick):
+  dotnet build .\Producer\Producer.csproj
+
+- Build the mock server / run it (for testing Producer):
+  dotnet run --project .\ProducerTest\ProducerTest.csproj
+  - mock server listens on: https://localhost:5001
+  - uploads saved to: ProducerTest\uploads
+
+- Run Producer (interactive):
+  dotnet run --project .\Producer\Producer.csproj
+  - prompts for p, c, q, base folder, server address
+  - pick "Start producers" from menu to begin watching folders
+
+- Run Producer (non-interactive):
+  dotnet run --project .\Producer\Producer.csproj -- 1 "<absolute-path-to>\Producer\videos" https://localhost:5001
+
+- Check saved uploads (mock server):
+  Get-ChildItem -Path '.\ProducerTest\uploads' | Format-Table Name, Length, LastWriteTime
+
+- Undo `.uploaded` suffix (PowerShell):
+  Get-ChildItem -Path .\Producer\videos -Recurse -Filter *.uploaded | Rename-Item -NewName { $_.Name -replace '\.uploaded$','' }
+
+- Create a 5MB dummy file for testing (PowerShell):
+  $bytes = New-Object byte[] (5*1024*1024)
+  [IO.File]::WriteAllBytes('.\Producer\videos\producer1\test_video.bin',$bytes)
+
+How to create a patch bundle (if you want a single patch file to carry to another branch)
+----------------------------------------------------------------------------------------
+From the repo root, after committing your local changes, run:
+
+1) Ensure branch contains all changes you want to export (commit everything):
+   git add -A
+   git commit -m "Snapshot of Producer/ProducerTest changes (agent)"
+
+2) Create patch(es) against origin/main or another base:
+   git fetch origin
+   git format-patch origin/main --stdout > ../agent_changes_patch_from_main.patch
+
+This will produce a single patch file one directory up. You can copy that file to other clones and apply it with:
+   git am ../agent_changes_patch_from_main.patch
+
+Alternative: create a branch snapshot to push to remote
+-------------------------------------------------------
+1) Make a backup branch (safety):
+   git checkout -b backup/agent-snapshot-20251204
+   git push -u origin backup/agent-snapshot-20251204
+
+2) Create a cleaned branch from main and cherry-pick commits (optional)
+   git fetch origin
+   git checkout -b consumerbranch-clean-from-main origin/main
+   git cherry-pick <commit-sha>  # use commits from your snapshot
+
+Notes about protobuf ambiguity
+------------------------------
+- When building multiple projects that import the same `Protos/streaming.proto` with `Grpc.Tools`, each project generates C# classes for the same message types under the same namespace. If you attempt to compile multiple projects into the same assembly or link their generated artifacts incorrectly, you may see ambiguous references.
+- Normal `dotnet build` per-project does not usually cause problems. If you see "Ambiguity between 'VideoMetadata'..." errors while building the entire solution, try building per-project or ensure generated files don't collide.
+
+Testing suggestions
+-------------------
+- Use the mock server first; it simulates queue-full transient errors and saves uploads so you can inspect them even with no Consumer implemented.
+- Confirm Producer interactive flow: run without args, enter folder and server, then select "Start producers". Drop a video file into `producer1` and watch upload logs.
+- If uploads repeatedly fail with resource-exhausted/unavailable, restart the mock server so its internal counters reset, and retry.
+
+If you want me to produce a single .patch file now (git format-patch) or push a snapshot branch to remote, tell me and I will:
+- commit any uncommitted changes here,
+- create a backup branch,
+- create a snapshot branch and push it, and
+- produce a single patch file saved in the repository root named `agent_changes_from_2025-12-04.patch`.
+
+Contact me with next step
+-------------------------
+Tell me whether you want a patch file created now, a snapshot branch pushed, or simply this changelog text file (already created). I can perform the git steps here if you want me to.
+
+End of changelog

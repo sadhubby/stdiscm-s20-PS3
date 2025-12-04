@@ -6,6 +6,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 using Google.Protobuf;
 using Grpc.Core;
 using Grpc.Net.Client;
@@ -15,21 +16,75 @@ namespace ProducerApp
 {
     class Program
     {
+        // Allowed video extensions (lowercase, without dot)
+        static readonly string[] AllowedExtensions = new[] { "mp4", "mkv", "mov", "avi", "wmv", "webm", "mpeg", "mpg", "m4v" };
+
         static async Task<int> Main(string[] args)
         {
             Console.WriteLine("Producer starting...");
 
+            // Defaults
             int producers = 1;
+            int maxQueue = 10; // unused locally but shown to user
+            int consumers = 1; // informational
             string baseFolder = Path.Combine(Directory.GetCurrentDirectory(), "producer_inputs");
             string serverAddress = "http://localhost:5000";
             int chunkSize = 64 * 1024; // 64KB
             int maxRetries = 5;
 
-            if (args.Length > 0) int.TryParse(args[0], out producers);
-            if (args.Length > 1) baseFolder = args[1];
-            if (args.Length > 2) serverAddress = args[2];
+            // If args provided, run non-interactive mode: p baseFolder serverAddress
+            if (args.Length >= 1) int.TryParse(args[0], out producers);
+            if (args.Length >= 2) baseFolder = args[1];
+            if (args.Length >= 3) serverAddress = args[2];
 
-            Console.WriteLine($"Configuration: producers={producers}, baseFolder={baseFolder}, server={serverAddress}");
+            if (args.Length == 0)
+            {
+                // Interactive-first flow
+                Console.WriteLine("Interactive producer setup (press Enter to accept defaults shown)");
+
+                producers = PromptInt("Number of producers (p)", producers);
+                consumers = PromptInt("(Informational) Number of consumers (c)", consumers);
+                maxQueue = PromptInt("(Informational) Max queue length (q)", maxQueue);
+
+                baseFolder = PromptString("Base folder for producer inputs", baseFolder);
+                if (!Directory.Exists(baseFolder))
+                {
+                    Console.WriteLine($"Folder '{baseFolder}' does not exist.");
+                    var create = PromptString("Create it? (y/N)", "N");
+                    if (create.Trim().Equals("y", StringComparison.OrdinalIgnoreCase))
+                    {
+                        Directory.CreateDirectory(baseFolder);
+                        Console.WriteLine("Created folder.");
+                    }
+                    else
+                    {
+                        Console.WriteLine("Please create the folder and re-run, or provide another path.");
+                        return 1;
+                    }
+                }
+
+                serverAddress = PromptString("Consumer server address (http://... or https://...)", serverAddress);
+                if (!serverAddress.StartsWith("http://", StringComparison.OrdinalIgnoreCase) && !serverAddress.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+                {
+                    Console.WriteLine("Server address must start with http:// or https://");
+                    return 1;
+                }
+
+                Console.WriteLine();
+                Console.WriteLine("Configuration summary:");
+                Console.WriteLine($"  producers = {producers}");
+                Console.WriteLine($"  baseFolder = {baseFolder}");
+                Console.WriteLine($"  server = {serverAddress}");
+                Console.WriteLine($"  allowed extensions = {string.Join(",", AllowedExtensions)}");
+                Console.WriteLine();
+
+                var proceed = PromptString("Type 'start' to begin producers, or anything else to cancel", "");
+                if (!proceed.Equals("start", StringComparison.OrdinalIgnoreCase))
+                {
+                    Console.WriteLine("Cancelled by user.");
+                    return 0;
+                }
+            }
 
             using var cts = new CancellationTokenSource();
             Console.CancelKeyPress += (s, e) => { e.Cancel = true; cts.Cancel(); };
@@ -51,12 +106,29 @@ namespace ProducerApp
             return 0;
         }
 
+        static int PromptInt(string prompt, int defaultValue)
+        {
+            Console.Write($"{prompt} [{defaultValue}]: ");
+            var line = Console.ReadLine();
+            if (string.IsNullOrWhiteSpace(line)) return defaultValue;
+            if (int.TryParse(line.Trim(), out var v)) return v;
+            Console.WriteLine("Invalid integer, using default.");
+            return defaultValue;
+        }
+
+        static string PromptString(string prompt, string defaultValue)
+        {
+            Console.Write($"{prompt} [{defaultValue}]: ");
+            var line = Console.ReadLine();
+            if (string.IsNullOrWhiteSpace(line)) return defaultValue;
+            return line.Trim();
+        }
+
         static async Task RunProducerAsync(int id, string folder, string serverAddress, int chunkSize, int maxRetries, CancellationToken token)
         {
             Console.WriteLine($"Producer#{id} watching folder: {folder}");
 
             // Configure HTTP handler
-            // for testing, skip cert validation if HTTPS
             var handler = new HttpClientHandler();
             if (serverAddress.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
             {
@@ -72,6 +144,7 @@ namespace ProducerApp
                 {
                     var files = Directory.EnumerateFiles(folder)
                         .Where(f => !f.EndsWith(".part", StringComparison.OrdinalIgnoreCase) && !f.EndsWith(".uploaded", StringComparison.OrdinalIgnoreCase))
+                        .Where(f => AllowedExtensions.Contains(Path.GetExtension(f).TrimStart('.').ToLowerInvariant()))
                         .OrderBy(f => File.GetCreationTimeUtc(f))
                         .ToArray();
 
@@ -89,7 +162,6 @@ namespace ProducerApp
                         if (ok)
                         {
                             Console.WriteLine($"Producer#{id} uploaded: {Path.GetFileName(file)}");
-                            // Optionally move or delete file after success
                             var dest = file + ".uploaded";
                             try { File.Move(file, dest, overwrite: true); } catch { }
                         }
@@ -115,6 +187,9 @@ namespace ProducerApp
             var fileSize = new FileInfo(filePath).Length;
             var checksum = await ComputeSha256(filePath, token);
 
+            // Use a single UploadId for all retries of the same file so retries are idempotent
+            var uploadId = Guid.NewGuid().ToString();
+
             while (attempt < maxRetries && !token.IsCancellationRequested)
             {
                 attempt++;
@@ -127,7 +202,7 @@ namespace ProducerApp
                         FileName = fileName,
                         FileType = Path.GetExtension(fileName).TrimStart('.'),
                         FileSizeBytes = fileSize,
-                        UploadId = Guid.NewGuid().ToString(),
+                        UploadId = uploadId,
                         ChecksumSha256 = checksum,
                         Timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
                     };
@@ -135,7 +210,6 @@ namespace ProducerApp
                     var metaReq = new VideoUploadRequest { Metadata = metadata };
                     await call.RequestStream.WriteAsync(metaReq);
 
-                    // Send file in chunks
                     using var fs = File.OpenRead(filePath);
                     var buffer = new byte[chunkSize];
                     int read;
@@ -153,7 +227,6 @@ namespace ProducerApp
                         return true;
                     }
 
-                    // If consumer said queue full, backoff and retry
                     var msg = response?.Message ?? string.Empty;
                     Console.WriteLine($"Upload response: success={response?.Success}, message={msg}");
                     if (msg != null && msg.IndexOf("full", StringComparison.OrdinalIgnoreCase) >= 0)
@@ -164,7 +237,6 @@ namespace ProducerApp
                         continue;
                     }
 
-                    // For other failures, don't retry immediately
                     Console.WriteLine($"Upload failed: {msg}");
                     return false;
                 }
