@@ -24,3 +24,8 @@ project.assets.json
 # OS files
 Thumbs.db
 .DS_Store
+obj/Debug/net9.0/Protos/Greet.cs
+obj/Debug/net9.0/Protos/GreetGrpc.cs
+obj/Debug/net9.0/stdiscm-PS3.AssemblyInfo.cs
+obj/Debug/net9.0/stdiscm-PS3.AssemblyInfoInputs.cache
+obj/Debug/net9.0/stdiscm-PS3.GeneratedMSBuildEditorConfig.editorconfig

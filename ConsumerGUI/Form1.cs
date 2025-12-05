@@ -1,64 +1,151 @@
-﻿using System;
+﻿using Grpc.Net.Client;
+using StreamingProtos;   // generated proto classes (VideoLibraryService, VideoInfo, ...)
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Forms;
-using Grpc.Core;
-using StreamingProtos;
 
 namespace ConsumerGUI
 {
     public partial class Form1 : Form
     {
-        private List<VideoItem> videos = new List<VideoItem>();
+        private readonly List<VideoItem> videos = new List<VideoItem>();
         private PictureBox currentPreviewBox;
         private AxWMPLib.AxWindowsMediaPlayer hoverPlayer;
         private Timer previewTimer;
+        private Timer refreshTimer;
 
-        private Channel _channl;
+        // gRPC
+        private GrpcChannel _channel;
         private VideoLibraryService.VideoLibraryServiceClient _libraryClient;
-        private readonly string _serverAddress = "localhost:5000";
-        private Timer _refreshTimer;
+        private readonly string _serverAddress = "http://localhost:5000";
+
         public Form1()
         {
             InitializeComponent();
+
             InitHoverPlayer();
             InitPreviewTimer();
             InitGrpcClient();
             InitRefreshTimer();
-            RefreshVideoList();
-            // LoadMockVideos();
-            RenderThumbnails();
+
+            // initial load (async)
+            _ = RefreshVideoList();
         }
 
-       private void InitGrpcClient()
-       {
-            _channel = new Channel(_serverAddress, ChannelCredentials.Insecure); 
-            _libraryClient = new VideoLibraryService.VideoLibraryServiceClient(_channel);
-        }
-        private void LoadMockVideos()
+        private void InitGrpcClient()
         {
-
-            /*@TODO 
-            * Load videos in the video player. 
-            * 
-            * Currently hardcoded to have the videos prepared beforehand in the folder stdiscm-ps3 -> Consumer -> Uploads
-            * Make this not be hardcoded but instead get from producer that will save it in the consumer uploads folder. 
-            * 
-            */
-            string uploadsPath = Path.GetFullPath(
-                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\..\..\Consumer\Uploads")
-            );
-
-            if (!Directory.Exists(uploadsPath))
+            try
             {
-                Directory.CreateDirectory(uploadsPath);
+                _channel = GrpcChannel.ForAddress(_serverAddress);
+                _libraryClient = new VideoLibraryService.VideoLibraryServiceClient(_channel);
             }
-            videos.Add(new VideoItem("RivalsAhh.mp4", Path.Combine(uploadsPath, "RivalsAhh.mp4")));
-            videos.Add(new VideoItem("Taboo Gameplay 1.mp4", Path.Combine(uploadsPath, "Taboo Gameplay 1.mp4")));
-            videos.Add(new VideoItem("Taboo Gameplay 3.mp4", Path.Combine(uploadsPath, "Taboo Gameplay 3.mp4")));
-            videos.Add(new VideoItem("Taboo Gameplay 4.mp4", Path.Combine(uploadsPath, "Taboo Gameplay 4.mp4")));
-            videos.Add(new VideoItem("Taboo Gameplay Furnace.mp4", Path.Combine(uploadsPath, "Taboo Gameplay Furnace.mp4")));
+            catch
+            {
+                _channel = null;
+                _libraryClient = null;
+            }
+        }
+
+        private void InitHoverPlayer()
+        {
+            hoverPlayer = new AxWMPLib.AxWindowsMediaPlayer();
+            hoverPlayer.CreateControl();
+            hoverPlayer.uiMode = "none";
+            hoverPlayer.Visible = false;
+            try { hoverPlayer.settings.mute = true; } catch { } // ignore if not ready
+            this.Controls.Add(hoverPlayer);
+
+            // clicking the hover player will stop preview and play in main player
+            hoverPlayer.ClickEvent += (s, e) =>
+            {
+                if (currentPreviewBox != null)
+                {
+                    var info = (ThumbnailInfo)currentPreviewBox.Tag;
+                    StopPreview();
+                    VideoPlayer.URL = info.Path;
+                }
+            };
+        }
+
+        private void InitPreviewTimer()
+        {
+            previewTimer = new Timer { Interval = 150 };
+            previewTimer.Tick += PreviewTimer_Tick;
+        }
+
+        private void InitRefreshTimer()
+        {
+            refreshTimer = new Timer { Interval = 5000 };
+            refreshTimer.Tick += async (s, e) => await RefreshVideoList();
+            refreshTimer.Start();
+        }
+
+        private async Task RefreshVideoList()
+        {
+            try
+            {
+                if (_libraryClient == null) InitGrpcClient();
+                if (_libraryClient == null) return;
+
+                var resp = await _libraryClient.ListVideosAsync(new ListVideosRequest());
+                if (resp == null) return;
+
+                // simple update: if counts differ or names changed, rebuild list
+                var newUrls = resp.Videos.Select(v => (v.FileName, v.PlaybackUrl)).ToList();
+
+                bool changed = newUrls.Count != videos.Count ||
+                    newUrls.Where((t, i) => i < videos.Count && videos[i].PlaybackUrl != t.PlaybackUrl).Any();
+
+                if (!changed)
+                {
+                    // quick check: also check if any new name appears
+                    for (int i = 0; i < newUrls.Count && i < videos.Count; ++i)
+                    {
+                        if (!string.Equals(newUrls[i].PlaybackUrl, videos[i].PlaybackUrl, StringComparison.Ordinal))
+                        {
+                            changed = true; break;
+                        }
+                    }
+                }
+
+                if (!changed)
+                {
+                    // maybe order changed: do a safer compare using set
+                    var setOld = videos.Select(v => v.PlaybackUrl).ToHashSet();
+                    var setNew = newUrls.Select(t => t.PlaybackUrl).ToHashSet();
+                    if (!setOld.SetEquals(setNew)) changed = true;
+                }
+
+                if (changed)
+                {
+                    // rebuild videos list
+                    videos.Clear();
+                    foreach (var vi in resp.Videos)
+                    {
+                        // playback url is expected to be an absolute http url
+                        var url = vi.PlaybackUrl;
+                        if (string.IsNullOrWhiteSpace(url))
+                        {
+                            // fallback: try file path (not expected)
+                            url = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..\\..\\..\\Consumer\\Uploads", vi.FileName);
+                        }
+                        videos.Add(new VideoItem(vi.FileName, url));
+                    }
+
+                    // UI update must be on UI thread
+                    if (InvokeRequired) Invoke(new Action(RenderThumbnails));
+                    else RenderThumbnails();
+                }
+            }
+            catch (Exception ex)
+            {
+                // server offline or network problem: log to debug window, keep showing previous items
+                Console.WriteLine("RefreshVideoList error: " + ex.Message);
+            }
         }
 
         private void RenderThumbnails()
@@ -67,18 +154,19 @@ namespace ConsumerGUI
 
             foreach (var vid in videos)
             {
-                var thumbnail = VideoThumbnailer.GetThumbnail(vid.FilePath);
+                // generate (or load cached) thumbnail - this may take a bit for new items
+                Image thumb = VideoThumbnailer.GetThumbnail(vid.PlaybackUrl, 320, 180);
 
-                PictureBox pb = new PictureBox
+                var pb = new PictureBox
                 {
                     Width = 200,
                     Height = 120,
                     SizeMode = PictureBoxSizeMode.StretchImage,
                     BorderStyle = BorderStyle.FixedSingle,
-                    Image = thumbnail
+                    Image = thumb
                 };
 
-                pb.Tag = new ThumbnailInfo(vid.FilePath, thumbnail);
+                pb.Tag = new ThumbnailInfo(vid.PlaybackUrl, thumb);
 
                 pb.MouseHover += ThumbnailMouseHover;
                 pb.MouseLeave += ThumbnailMouseLeave;
@@ -98,13 +186,21 @@ namespace ConsumerGUI
             previewTimer.Start();
         }
 
-        private void PreviewTimerTick(object sender, EventArgs e)
+        private void ThumbnailMouseLeave(object sender, EventArgs e)
         {
-            if (currentPreviewBox == null)
-                return;
+            // let PreviewTimerTick decide when mouse actually left (prevents flicker when overlay receives events)
+        }
 
-            // prevent flicker by checking real mouse position
-            if (!currentPreviewBox.Bounds.Contains(PointToClient(Cursor.Position)))
+        private void PreviewTimer_Tick(object? sender, EventArgs e)
+        {
+            if (currentPreviewBox == null) return;
+
+            // check if mouse is still within thumbnail bounds (convert to form client coords)
+            var rect = currentPreviewBox.Bounds;
+            // Bounds are relative to parent (flowPanel). Need to translate mouse to parent coordinates
+            var cursor = PointToClient(Cursor.Position);
+            var parentPoint = currentPreviewBox.Parent.PointToClient(Cursor.Position);
+            if (!currentPreviewBox.Bounds.Contains(parentPoint))
             {
                 StopPreview();
             }
@@ -112,23 +208,37 @@ namespace ConsumerGUI
 
         private void ShowPreview(ThumbnailInfo info, PictureBox pb)
         {
-            if (!File.Exists(info.Path))
-                return;
+            try
+            {
+                if (!Uri.IsWellFormedUriString(info.Path, UriKind.Absolute))
+                {
+                    // if not absolute, treat as local file path
+                    if (!File.Exists(info.Path)) return;
+                }
 
-            hoverPlayer.URL = info.Path;
-            hoverPlayer.settings.autoStart = true;
-            hoverPlayer.Ctlcontrols.currentPosition = 0;
+                hoverPlayer.URL = info.Path;
+                hoverPlayer.settings.autoStart = true;
+                hoverPlayer.Ctlcontrols.currentPosition = 0;
 
-            hoverPlayer.Bounds = pb.Bounds;
-            hoverPlayer.Parent = pb.Parent;
-            hoverPlayer.BringToFront();
-            hoverPlayer.Visible = true;
+                hoverPlayer.Bounds = pb.Bounds;
+                hoverPlayer.Parent = pb.Parent;
+                hoverPlayer.BringToFront();
+                hoverPlayer.Visible = true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("ShowPreview error: " + ex.Message);
+            }
         }
 
         private void StopPreview()
         {
-            hoverPlayer.Ctlcontrols.stop();
-            hoverPlayer.Visible = false;
+            try
+            {
+                hoverPlayer.Ctlcontrols.stop();
+                hoverPlayer.Visible = false;
+            }
+            catch { }
 
             if (currentPreviewBox != null)
             {
@@ -140,90 +250,24 @@ namespace ConsumerGUI
             currentPreviewBox = null;
         }
 
-        private void ThumbnailMouseLeave(object sender, EventArgs e)
-        {
-            // do nothing muna haha
-        }
-
         private void ThumbnailClick(object sender, EventArgs e)
         {
+            // stop preview first so main player starts clean
+            StopPreview();
+
             var pb = (PictureBox)sender;
             var info = (ThumbnailInfo)pb.Tag;
-
-            VideoPlayer.URL = info.Path;
-        }
-
-        private void InitHoverPlayer()
-        {
-            hoverPlayer = new AxWMPLib.AxWindowsMediaPlayer();
-            hoverPlayer.CreateControl();
-            hoverPlayer.uiMode = "none";
-            hoverPlayer.Visible = false;
-            hoverPlayer.settings.mute = true;
-            this.Controls.Add(hoverPlayer);
-        }
-
-        private void InitPreviewTimer()
-        {
-            previewTimer = new Timer
-            {
-                Interval = 100
-            };
-            previewTimer.Tick += PreviewTimerTick;
-        }
-
-        private void InitRefreshTimer()
-        {
-            _refreshTimer = new Timer
-            {
-                Interval = 5000 // Refresh every 5 seconds (5000 ms)
-            };
-            _refreshTimer.Tick += RefreshTimer_Tick;
-            _refreshTimer.Start();
-        }
-
-        private async void RefreshTimer_Tick(object sender, EventArgs e)
-        {
-            await RefreshVideoList();
-        }
-
-        private async Task RefreshVideoList()
-        {
             try
             {
-                // 1. Call the gRPC service
-                var request = new ListVideosRequest();
-                var response = await _libraryClient.ListVideosAsync(request);
-                
-                // 2. Check if the video list has changed (simple comparison by count)
-                if (response.Videos.Count > videos.Count)
-                {
-                    // 3. Update the local list and trigger a UI refresh
-                    
-                    // Clear the existing list
-                    videos.Clear(); 
-
-                    // Convert gRPC VideoInfo objects to local VideoItem objects
-                    foreach (var videoInfo in response.Videos)
-                    {
-                        // Note: FilePath should point to the actual saved file on the Consumer VM
-                        // You might need to adjust how the consumer service provides the actual physical path
-                        // or rely on the PlaybackUrl if it's meant to stream back from the same host.
-                        videos.Add(new VideoItem(
-                            videoInfo.FileName, 
-                            videoInfo.PlaybackUrl // Using PlaybackUrl as the source for the WMP control
-                        ));
-                    }
-                    
-                    RenderThumbnails();
-                }
+                VideoPlayer.URL = info.Path; // plays HTTP URL
             }
             catch (Exception ex)
             {
-                // Handle connection errors (e.g., server is offline)
-                Console.WriteLine($"Error fetching video list: {ex.Message}");
+                MessageBox.Show("Cannot play the selected video: " + ex.Message);
             }
         }
+
+        // small helper class used in tags
         private class ThumbnailInfo
         {
             public string Path { get; }
@@ -234,6 +278,19 @@ namespace ConsumerGUI
                 Path = path;
                 Thumbnail = thumb;
             }
+        }
+
+        // cleanup on close
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
+            try
+            {
+                refreshTimer?.Stop();
+                previewTimer?.Stop();
+                _channel?.Dispose();
+            }
+            catch { }
+            base.OnFormClosing(e);
         }
     }
 }
