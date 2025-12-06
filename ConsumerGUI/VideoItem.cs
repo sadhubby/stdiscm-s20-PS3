@@ -1,4 +1,6 @@
-﻿namespace ConsumerGUI
+﻿using System;
+
+namespace ConsumerGUI
 {
     public class VideoItem
     {
@@ -8,7 +10,8 @@
         public VideoItem(string fileName, string playbackURL)
         {
             FileName = fileName ?? throw new ArgumentNullException(nameof(fileName));
-            FilePath = filePath ?? throw new ArgumentNullException(nameof(filePath));
+            // Corrected the assignment of FilePath to use playbackURL
+            FilePath = playbackURL ?? throw new ArgumentNullException(nameof(playbackURL)); 
         }
     }
 }

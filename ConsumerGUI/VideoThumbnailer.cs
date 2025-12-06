@@ -86,7 +86,7 @@ namespace ConsumerGUI
                     RedirectStandardError = true
                 };
 
-                using (var p = Process.Start(psi))
+                using (var p = Process.Start(psi)!)
                 {
                     // read stderr to avoid blocking if ffmpeg outputs a lot
                     var err = p.StandardError.ReadToEnd();

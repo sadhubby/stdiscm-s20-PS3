@@ -26,7 +26,14 @@ namespace ConsumerGUI.Properties
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class Resources
     {
-        internal static Image default_thumb;
+        internal static System.Drawing.Image default_thumb
+        {
+            get
+            {
+                object obj = ResourceManager.GetObject("default_thumb", resourceCulture);
+                return ((System.Drawing.Image)(obj));
+            }
+        }
         private static global::System.Resources.ResourceManager resourceMan;
 
         private static global::System.Globalization.CultureInfo resourceCulture;

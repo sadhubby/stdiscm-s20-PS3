@@ -112,9 +112,8 @@ namespace ConsumerGUI
             hoverPlayer.Ctlcontrols.stop();
             hoverPlayer.Visible = false;
 
-            if (currentPreviewBox != null)
+            if (currentPreviewBox != null && currentPreviewBox.Tag is ThumbnailInfo info)
             {
-                var info = (ThumbnailInfo)currentPreviewBox.Tag;
                 currentPreviewBox.Image = info.Thumbnail;
             }
 
@@ -124,7 +123,7 @@ namespace ConsumerGUI
 
         private void ThumbnailMouseLeave(object? sender, EventArgs e)
         {
-            // do nothing muna haha
+            StopPreview();
         }
 
         private void ThumbnailClick(object? sender, EventArgs e)
