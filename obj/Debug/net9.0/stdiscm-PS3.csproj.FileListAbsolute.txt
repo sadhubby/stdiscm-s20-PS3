@@ -170,4 +170,3 @@ D:\Users\user\Downloads\STDISCM_P3\stdiscm-PS3\obj\Debug\net9.0\refint\stdiscm-P
 D:\Users\user\Downloads\STDISCM_P3\stdiscm-PS3\obj\Debug\net9.0\stdiscm-PS3.pdb
 D:\Users\user\Downloads\STDISCM_P3\stdiscm-PS3\obj\Debug\net9.0\stdiscm-PS3.genruntimeconfig.cache
 D:\Users\user\Downloads\STDISCM_P3\stdiscm-PS3\obj\Debug\net9.0\ref\stdiscm-PS3.dll
-D:\Users\user\Downloads\STDISCM_P3\stdiscm-PS3\obj\Debug\net9.0\staticwebassets.upToDateCheck.txt

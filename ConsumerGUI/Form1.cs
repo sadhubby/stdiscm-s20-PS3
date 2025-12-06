@@ -8,15 +8,14 @@ namespace ConsumerGUI
 {
     public partial class Form1 : Form
     {
-        private List<VideoItem> videos = new List<VideoItem>();
+        private List<VideoItem> videos = new();
         private PictureBox currentPreviewBox;
         private AxWMPLib.AxWindowsMediaPlayer hoverPlayer;
         private System.Windows.Forms.Timer previewTimer;
 
-        // Path to uploads
+        // Path to uploads folder
         private readonly string uploadsPath =
             Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\..\..\..\..\uploads"));
-
 
         public Form1()
         {
@@ -32,19 +31,17 @@ namespace ConsumerGUI
         {
             videos.Clear();
 
-            string fullUploadsPath = Path.GetFullPath(uploadsPath);
-
-            if (!Directory.Exists(fullUploadsPath))
+            if (!Directory.Exists(uploadsPath))
             {
-                MessageBox.Show("Uploads folder not found:\n" + fullUploadsPath);
+                MessageBox.Show("Uploads folder missing:\n" + uploadsPath);
                 return;
             }
 
-            string[] supported = { ".mp4", ".mov", ".mkv", ".avi", ".wmv", ".webm", ".mpeg", ".mpg", ".m4v" };
+            string[] videoExt = { ".mp4", ".mov", ".mkv", ".avi", ".wmv", ".webm", ".mpeg", ".mpg", ".m4v" };
 
-            foreach (var file in Directory.GetFiles(fullUploadsPath))
+            foreach (string file in Directory.GetFiles(uploadsPath))
             {
-                if (Array.Exists(supported, ext => ext.Equals(Path.GetExtension(file), StringComparison.OrdinalIgnoreCase)))
+                if (Array.Exists(videoExt, e => e.Equals(Path.GetExtension(file), StringComparison.OrdinalIgnoreCase)))
                 {
                     videos.Add(new VideoItem(Path.GetFileName(file), file));
                 }
@@ -57,16 +54,16 @@ namespace ConsumerGUI
 
             foreach (var vid in videos)
             {
-                Image thumbnail = VideoThumbnailer.GetThumbnail(vid.FilePath);
+                Image thumb = VideoThumbnailer.GetThumbnail(vid.FilePath);
 
-                PictureBox pb = new PictureBox
+                PictureBox pb = new()
                 {
                     Width = 200,
                     Height = 120,
                     SizeMode = PictureBoxSizeMode.StretchImage,
                     BorderStyle = BorderStyle.FixedSingle,
-                    Image = thumbnail,
-                    Tag = new ThumbnailInfo(vid.FilePath, thumbnail)
+                    Image = thumb,
+                    Tag = new ThumbnailInfo(vid.FilePath, thumb)
                 };
 
                 pb.MouseHover += ThumbnailMouseHover;
@@ -79,11 +76,10 @@ namespace ConsumerGUI
 
         private void ThumbnailMouseHover(object sender, EventArgs e)
         {
-            var pb = (PictureBox)sender;
-            var info = (ThumbnailInfo)pb.Tag;
+            currentPreviewBox = (PictureBox)sender;
+            var info = (ThumbnailInfo)currentPreviewBox.Tag;
 
-            currentPreviewBox = pb;
-            ShowPreview(info, pb);
+            ShowPreview(info, currentPreviewBox);
             previewTimer.Start();
         }
 
@@ -104,9 +100,9 @@ namespace ConsumerGUI
 
         private void PreviewTimerTick(object sender, EventArgs e)
         {
-            if (currentPreviewBox == null)
-                return;
+            if (currentPreviewBox == null) return;
 
+            // If mouse leaves thumbnail area → stop preview
             if (!currentPreviewBox.Bounds.Contains(PointToClient(Cursor.Position)))
                 StopPreview();
         }
@@ -128,17 +124,19 @@ namespace ConsumerGUI
 
         private void ThumbnailMouseLeave(object sender, EventArgs e)
         {
-            // handled by timer
+            // Timer checks mouse position — no work here
         }
 
         private void ThumbnailClick(object sender, EventArgs e)
         {
-            StopPreview();
+            StopPreview();  // ensure preview closes cleanly
 
             var pb = (PictureBox)sender;
             var info = (ThumbnailInfo)pb.Tag;
 
+            // 🔥 Play selected video on the right-side VideoPlayer
             VideoPlayer.URL = info.Path;
+            VideoPlayer.Ctlcontrols.play();
         }
 
         private void InitHoverPlayer()
@@ -146,15 +144,15 @@ namespace ConsumerGUI
             hoverPlayer = new AxWMPLib.AxWindowsMediaPlayer();
             hoverPlayer.CreateControl();
             hoverPlayer.uiMode = "none";
-            hoverPlayer.Visible = false;
             hoverPlayer.settings.mute = true;
+            hoverPlayer.Visible = false;
 
             this.Controls.Add(hoverPlayer);
         }
 
         private void InitPreviewTimer()
         {
-            previewTimer = new System.Windows.Forms.Timer { Interval = 100 };
+            previewTimer = new System.Windows.Forms.Timer() { Interval = 100 };
             previewTimer.Tick += PreviewTimerTick;
         }
 
