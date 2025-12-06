@@ -122,21 +122,53 @@ namespace ConsumerGUI
 {
     public static class VideoThumbnailer
     {
+        private static string _ffmpegPath = null;
+
+        private static string FindFfmpeg()
+        {
+            if (_ffmpegPath != null) return _ffmpegPath;
+
+            // Try 1: Look in Shared/ffmpeg subdirectory relative to solution root
+            string basePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\..\..\Shared\ffmpeg\ffmpeg-8.0.1-essentials_build\bin\ffmpeg.exe");
+            string candidate = Path.GetFullPath(basePath);
+            if (File.Exists(candidate))
+            {
+                _ffmpegPath = candidate;
+                return _ffmpegPath;
+            }
+
+            // Try 2: Try to find ffmpeg.exe on system PATH
+            try
+            {
+                var psi = new ProcessStartInfo
+                {
+                    FileName = "where",
+                    Arguments = "ffmpeg.exe",
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    CreateNoWindow = true
+                };
+                using (var p = Process.Start(psi))
+                {
+                    string output = p.StandardOutput.ReadToEnd().Trim();
+                    p.WaitForExit();
+                    if (!string.IsNullOrEmpty(output) && File.Exists(output))
+                    {
+                        _ffmpegPath = output;
+                        return _ffmpegPath;
+                    }
+                }
+            }
+            catch { }
+
+            // Fallback: just use "ffmpeg" and hope it's on PATH
+            _ffmpegPath = "ffmpeg.exe";
+            return _ffmpegPath;
+        }
+
         public static Image GetThumbnail(string videoPath)
         {
-            // Build ffmpeg path relative to the solution (portable)
-            string ffmpeg = Path.Combine(
-                Application.StartupPath,
-                @"C:\Users\Evan\Downloads\ffmpeg-8.0.1-essentials_build\ffmpeg-8.0.1-essentials_build\bin\ffmpeg.exe"
-            );
-
-            ffmpeg = Path.GetFullPath(ffmpeg);
-
-            if (!File.Exists(ffmpeg))
-            {
-                MessageBox.Show("ERROR: ffmpeg.exe not found at:\n" + ffmpeg);
-                return Properties.Resources.default_thumb;
-            }
+            string ffmpeg = FindFfmpeg();
 
             string tempFile = Path.GetTempFileName() + ".jpg";
 

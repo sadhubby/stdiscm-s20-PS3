@@ -30,6 +30,11 @@ string httpBaseUrl = cfg.GetValue<string>("httpBaseUrl") ?? $"http://localhost:{
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 
+Console.WriteLine($"[CONSUMER] Current directory: {Directory.GetCurrentDirectory()}");
+Console.WriteLine($"[CONSUMER] Upload folder: {uploadFolder}");
+Console.WriteLine($"[CONSUMER] HTTP base URL: {httpBaseUrl}");
+Console.WriteLine($"[CONSUMER] gRPC port: {grpcPort}, HTTP port: {httpPort}");
+
 // Add services to the container.
 builder.Services.AddGrpc();
 
@@ -56,7 +61,13 @@ builder.Services.AddSingleton<VideoUploadServiceImpl>(sp => {
         httpBaseUrl   // Explicitly pass the correct variable here
     );
 });
-builder.Services.AddSingleton<VideoLibraryServiceImpl>();
+builder.Services.AddSingleton<VideoLibraryServiceImpl>(sp => {
+    return new VideoLibraryServiceImpl(
+        sp.GetRequiredService<ILogger<VideoLibraryServiceImpl>>(),
+        uploadFolder,  // Pass uploadFolder explicitly
+        httpBaseUrl    // Pass httpBaseUrl explicitly
+    );
+});
 
 var app = builder.Build();
 

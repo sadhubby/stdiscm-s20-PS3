@@ -27,8 +27,10 @@ namespace stdiscm_PS3.Services
             var resp = new ListVideosResponse();
             try
             {
+                Console.WriteLine($"[VideoLibrary] ListVideos called. Checking folder: {_uploadFolder}");
                 if (!Directory.Exists(_uploadFolder))
                 {
+                    Console.WriteLine($"[VideoLibrary] Upload folder does not exist!");
                     return Task.FromResult(resp);
                 }
 
@@ -38,14 +40,18 @@ namespace stdiscm_PS3.Services
                     .OrderByDescending(fi => fi.CreationTimeUtc)
                     .ToArray();
 
+                Console.WriteLine($"[VideoLibrary] Found {files.Length} files in upload folder");
                 foreach (var fi in files)
                 {
+                    Console.WriteLine($"[VideoLibrary]   - {fi.Name} ({fi.Length} bytes)");
+                    var playbackUrl = $"{_httpBaseUrl}/media/{Uri.EscapeDataString(fi.Name)}";
+                    Console.WriteLine($"[VideoLibrary]     PlaybackUrl: {playbackUrl}");
                     var vid = new VideoInfo
                     {
                         VideoId = Path.GetFileNameWithoutExtension(fi.Name),
                         FileName = fi.Name,
                         SizeInBytes = fi.Length,
-                        PlaybackUrl = $"{_httpBaseUrl}/media/{Uri.EscapeDataString(fi.Name)}",
+                        PlaybackUrl = playbackUrl,
                         UploadedUtcUnix = new DateTimeOffset(fi.CreationTimeUtc).ToUnixTimeSeconds()
                     };
                     resp.Videos.Add(vid);
@@ -53,6 +59,7 @@ namespace stdiscm_PS3.Services
             }
             catch (Exception ex)
             {
+                Console.WriteLine($"[VideoLibrary] Error: {ex.Message}\n{ex.StackTrace}");
                 _logger.LogError(ex, "ListVideos failed");
             }
             return Task.FromResult(resp);
