@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net9.0-windows</TargetFramework> 
+    <TargetFramework>net9.0-windows</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
@@ -13,14 +13,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    </ItemGroup>
-
-  <ItemGroup>
-    <Protobuf Include="..\Protos\streaming.proto" GrpcServices="Client" />
+    <Protobuf Include="..\Protos\streaming.proto"
+              GrpcServices="Client"
+              csharp_namespace="stdiscm_PS3" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include = "WMPLib" Version="1.0.0" />
+    <PackageReference Include="WMPLib" Version="1.0.0" />
     <PackageReference Include="Grpc.Net.Client" Version="2.64.0" />
     <PackageReference Include="Google.Protobuf" Version="3.27.0" />
     <PackageReference Include="Grpc.Tools" Version="2.64.0" PrivateAssets="All" />

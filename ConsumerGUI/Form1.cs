@@ -4,9 +4,6 @@ using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
 
-using stdiscm_PS3;          // gRPC generated classes from streaming.proto
-using Grpc.Net.Client;      // modern gRPC channel API
-
 namespace ConsumerGUI
 {
     public partial class Form1 : Form
@@ -16,56 +13,51 @@ namespace ConsumerGUI
         private AxWMPLib.AxWindowsMediaPlayer hoverPlayer;
         private System.Windows.Forms.Timer previewTimer;
 
-        // gRPC
-        private GrpcChannel _channel;
-        private VideoLibraryService.VideoLibraryServiceClient _client;
+        // Path to uploads
+        private readonly string uploadsPath =
+            Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\..\..\..\uploads"));
+
 
         public Form1()
         {
             InitializeComponent();
-            InitGrpc();
             InitHoverPlayer();
             InitPreviewTimer();
 
-            _ = RefreshVideoList(); // async load
+            LoadVideosFromUploads();
+            RenderThumbnails();
         }
 
-        private void InitGrpc()
+        private void LoadVideosFromUploads()
         {
-            _channel = GrpcChannel.ForAddress("http://localhost:5000");
-            _client = new VideoLibraryService.VideoLibraryServiceClient(_channel);
-        }
+            videos.Clear();
 
-        private async System.Threading.Tasks.Task RefreshVideoList()
-        {
-            try
+            string fullUploadsPath = Path.GetFullPath(uploadsPath);
+
+            if (!Directory.Exists(fullUploadsPath))
             {
-                var response = await _client.ListVideosAsync(new ListVideosRequest());
-                videos.Clear();
+                MessageBox.Show("Uploads folder not found:\n" + fullUploadsPath);
+                return;
+            }
 
-                foreach (var v in response.Videos)
+            string[] supported = { ".mp4", ".mov", ".mkv", ".avi", ".wmv", ".webm", ".mpeg", ".mpg", ".m4v" };
+
+            foreach (var file in Directory.GetFiles(fullUploadsPath))
+            {
+                if (Array.Exists(supported, ext => ext.Equals(Path.GetExtension(file), StringComparison.OrdinalIgnoreCase)))
                 {
-                    videos.Add(new VideoItem(v.FileName, v.PlaybackUrl));
+                    videos.Add(new VideoItem(Path.GetFileName(file), file));
                 }
-
-                await RenderThumbnails();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Failed to fetch video list: " + ex.Message);
             }
         }
 
-        private async System.Threading.Tasks.Task RenderThumbnails()
+        private void RenderThumbnails()
         {
             flowPanelVideos.Controls.Clear();
 
             foreach (var vid in videos)
             {
-                // Download HTTP video → temp → ffmpeg thumbnail
-                string localTemp = await HttpVideoFetcher.DownloadToTemp(vid.FilePath);
-                var thumbnail = VideoThumbnailer.GetThumbnail(localTemp);
-                try { File.Delete(localTemp); } catch { }
+                Image thumbnail = VideoThumbnailer.GetThumbnail(vid.FilePath);
 
                 PictureBox pb = new PictureBox
                 {
@@ -97,7 +89,10 @@ namespace ConsumerGUI
 
         private void ShowPreview(ThumbnailInfo info, PictureBox pb)
         {
-            hoverPlayer.URL = info.Path; // HTTP playback URL
+            if (!File.Exists(info.Path))
+                return;
+
+            hoverPlayer.URL = info.Path;
             hoverPlayer.settings.autoStart = true;
             hoverPlayer.Ctlcontrols.currentPosition = 0;
 
@@ -109,7 +104,8 @@ namespace ConsumerGUI
 
         private void PreviewTimerTick(object sender, EventArgs e)
         {
-            if (currentPreviewBox == null) return;
+            if (currentPreviewBox == null)
+                return;
 
             if (!currentPreviewBox.Bounds.Contains(PointToClient(Cursor.Position)))
                 StopPreview();
@@ -132,7 +128,7 @@ namespace ConsumerGUI
 
         private void ThumbnailMouseLeave(object sender, EventArgs e)
         {
-            // handled via timer
+            // handled by timer
         }
 
         private void ThumbnailClick(object sender, EventArgs e)
@@ -142,7 +138,7 @@ namespace ConsumerGUI
             var pb = (PictureBox)sender;
             var info = (ThumbnailInfo)pb.Tag;
 
-            VideoPlayer.URL = info.Path; // open full streaming playback
+            VideoPlayer.URL = info.Path;
         }
 
         private void InitHoverPlayer()
