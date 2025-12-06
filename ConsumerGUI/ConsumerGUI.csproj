@@ -13,10 +13,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\stdiscm-PS3.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
     </ItemGroup>
 
   <ItemGroup>

@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
-using Grpc.Core;
-using stdiscm_PS3;   
+
+using stdiscm_PS3;          // gRPC generated classes from streaming.proto
+using Grpc.Net.Client;      // modern gRPC channel API
 
 namespace ConsumerGUI
 {
@@ -13,12 +14,11 @@ namespace ConsumerGUI
         private List<VideoItem> videos = new List<VideoItem>();
         private PictureBox currentPreviewBox;
         private AxWMPLib.AxWindowsMediaPlayer hoverPlayer;
-        private Timer previewTimer;
+        private System.Windows.Forms.Timer previewTimer;
 
         // gRPC
-        private Channel _channel;
+        private GrpcChannel _channel;
         private VideoLibraryService.VideoLibraryServiceClient _client;
-        private readonly string _server = "localhost:5000";
 
         public Form1()
         {
@@ -27,12 +27,12 @@ namespace ConsumerGUI
             InitHoverPlayer();
             InitPreviewTimer();
 
-            _ = RefreshVideoList();  // async load
+            _ = RefreshVideoList(); // async load
         }
 
         private void InitGrpc()
         {
-            _channel = new Channel(_server, ChannelCredentials.Insecure);
+            _channel = GrpcChannel.ForAddress("http://localhost:5000");
             _client = new VideoLibraryService.VideoLibraryServiceClient(_channel);
         }
 
@@ -74,7 +74,7 @@ namespace ConsumerGUI
                     SizeMode = PictureBoxSizeMode.StretchImage,
                     BorderStyle = BorderStyle.FixedSingle,
                     Image = thumbnail,
-                    Tag = new ThumbnailInfo(vid.FilePath, thumbnail) // using HTTP url
+                    Tag = new ThumbnailInfo(vid.FilePath, thumbnail)
                 };
 
                 pb.MouseHover += ThumbnailMouseHover;
@@ -97,7 +97,7 @@ namespace ConsumerGUI
 
         private void ShowPreview(ThumbnailInfo info, PictureBox pb)
         {
-            hoverPlayer.URL = info.Path; // HTTP URL
+            hoverPlayer.URL = info.Path; // HTTP playback URL
             hoverPlayer.settings.autoStart = true;
             hoverPlayer.Ctlcontrols.currentPosition = 0;
 
@@ -132,7 +132,7 @@ namespace ConsumerGUI
 
         private void ThumbnailMouseLeave(object sender, EventArgs e)
         {
-            // handled via timer logic
+            // handled via timer
         }
 
         private void ThumbnailClick(object sender, EventArgs e)
@@ -142,7 +142,7 @@ namespace ConsumerGUI
             var pb = (PictureBox)sender;
             var info = (ThumbnailInfo)pb.Tag;
 
-            VideoPlayer.URL = info.Path; // HTTP streaming URL
+            VideoPlayer.URL = info.Path; // open full streaming playback
         }
 
         private void InitHoverPlayer()
@@ -158,7 +158,7 @@ namespace ConsumerGUI
 
         private void InitPreviewTimer()
         {
-            previewTimer = new Timer { Interval = 100 };
+            previewTimer = new System.Windows.Forms.Timer { Interval = 100 };
             previewTimer.Tick += PreviewTimerTick;
         }
 
