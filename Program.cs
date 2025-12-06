@@ -25,7 +25,7 @@ int httpPort = cfg.GetValue<int>("HttpPort", 5000);
 int queueCapacity = cfg.GetValue<int>("UploadQueueCapacity", 10);
 int workerCount = cfg.GetValue<int>("UploadWorkerCount", 4);
 string uploadFolder = cfg.GetValue<string>("uploadFolder") ?? Path.Combine(Directory.GetCurrentDirectory(), "uploads");
-string httpBaseUrl = cfg.GetValue<string>("httpBaseUrl") ?? $"http://localhost:{httpPort}";
+string httpBaseUrl = cfg.GetValue<string>("httpBaseUrl") ?? $"http://0.0.0.0:{httpPort}";
 
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
