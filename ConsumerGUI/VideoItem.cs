@@ -2,13 +2,13 @@
 {
     public class VideoItem
     {
-        public string FileName { get; set; }
-        public string FilePath { get; set; }
+        public string FileName { get; }
+        public string FilePath { get; }
 
-        public VideoItem(string fileName, string filePath)
+        public VideoItem(string fileName, string playbackURL)
         {
-            FileName = fileName;
-            FilePath = filePath;
+            FileName = fileName ?? throw new ArgumentNullException(nameof(fileName));
+            FilePath = filePath ?? throw new ArgumentNullException(nameof(filePath));
         }
     }
 }
