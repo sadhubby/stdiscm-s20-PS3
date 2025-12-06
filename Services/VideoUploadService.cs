@@ -4,7 +4,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Grpc.Core;
 using Microsoft.Extensions.Logging;
-using StreamingProtos;
 using ConsumerBackend.Models;
 using System.Text;
 using System.Security.Cryptography;
@@ -180,7 +179,7 @@ namespace stdiscm_PS3.Services
                     {
                         Success = true,
                         Message = "Upload accepted; processing in background.",
-                        video_id = job.JobId
+                        VideoId = job.JobId
                     };
                 }
 

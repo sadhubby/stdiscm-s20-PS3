@@ -4,19 +4,18 @@ using System.Linq;
 using System.Threading.Tasks;
 using Grpc.Core;
 using Microsoft.Extensions.Logging;
-using StreamingProtos;
 using System.Collections.Generic;
 using stdiscm_PS3;
 
 namespace stdiscm_PS3.Services
 {
-    public class VideoLibraryService : VideoLibraryService.VideoLibraryServiceBase
+    public class VideoLibraryServiceImpl : VideoLibraryService.VideoLibraryServiceBase
     {
-        private readonly ILogger<VideoLibraryService> _logger;
+        private readonly ILogger<VideoLibraryServiceImpl> _logger;
         private readonly string _uploadFolder;
         private readonly string _httpBaseUrl;
 
-        public VideoLibraryService(ILogger<VideoLibraryService> logger, string uploadFolder, string httpBaseUrl)
+        public VideoLibraryServiceImpl(ILogger<VideoLibraryServiceImpl> logger, string uploadFolder, string httpBaseUrl)
         {
             _logger = logger;
             _uploadFolder = uploadFolder;
@@ -45,7 +44,7 @@ namespace stdiscm_PS3.Services
                     {
                         VideoId = Path.GetFileNameWithoutExtension(fi.Name),
                         FileName = fi.Name,
-                        SizeBytes = fi.Length,
+                        SizeInBytes = fi.Length,
                         PlaybackUrl = $"{_httpBaseUrl}/media/{Uri.EscapeDataString(fi.Name)}",
                         UploadedUtcUnix = new DateTimeOffset(fi.CreationTimeUtc).ToUnixTimeSeconds()
                     };

@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("stdiscm-PS3")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+fb556eebd6402d23db6fd39b6aef5a745dba424d")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+11693edeeeb086cc99a2cb33b77d884f81459145")]
 [assembly: System.Reflection.AssemblyProductAttribute("stdiscm-PS3")]
 [assembly: System.Reflection.AssemblyTitleAttribute("stdiscm-PS3")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

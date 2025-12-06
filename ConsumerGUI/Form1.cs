@@ -9,9 +9,9 @@ namespace ConsumerGUI
     public partial class Form1 : Form
     {
         private List<VideoItem> videos = new List<VideoItem>();
-        private PictureBox currentPreviewBox;
-        private AxWMPLib.AxWindowsMediaPlayer hoverPlayer;
-        private Timer previewTimer;
+        private PictureBox? currentPreviewBox;
+        private AxWMPLib.AxWindowsMediaPlayer hoverPlayer = null!;
+        private System.Windows.Forms.Timer previewTimer = null!;
 
         public Form1()
         {
@@ -70,17 +70,17 @@ namespace ConsumerGUI
             }
         }
 
-        private void ThumbnailMouseHover(object sender, EventArgs e)
+        private void ThumbnailMouseHover(object? sender, EventArgs e)
         {
-            var pb = (PictureBox)sender;
-            var info = (ThumbnailInfo)pb.Tag;
+            var pb = (PictureBox)sender!;
+            var info = (ThumbnailInfo)pb.Tag!;
             currentPreviewBox = pb;
 
             ShowPreview(info, pb);
             previewTimer.Start();
         }
 
-        private void PreviewTimerTick(object sender, EventArgs e)
+        private void PreviewTimerTick(object? sender, EventArgs e)
         {
             if (currentPreviewBox == null)
                 return;
@@ -122,15 +122,15 @@ namespace ConsumerGUI
             currentPreviewBox = null;
         }
 
-        private void ThumbnailMouseLeave(object sender, EventArgs e)
+        private void ThumbnailMouseLeave(object? sender, EventArgs e)
         {
             // do nothing muna haha
         }
 
-        private void ThumbnailClick(object sender, EventArgs e)
+        private void ThumbnailClick(object? sender, EventArgs e)
         {
-            var pb = (PictureBox)sender;
-            var info = (ThumbnailInfo)pb.Tag;
+            var pb = (PictureBox)sender!;
+            var info = (ThumbnailInfo)pb.Tag!;
 
             VideoPlayer.URL = info.Path;
         }
@@ -147,7 +147,7 @@ namespace ConsumerGUI
 
         private void InitPreviewTimer()
         {
-            previewTimer = new Timer
+            previewTimer = new System.Windows.Forms.Timer
             {
                 Interval = 100
             };

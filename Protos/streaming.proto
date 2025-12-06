@@ -27,6 +27,7 @@ message VideoMetadata {
   string upload_id = 4;
   string checksum_sha256 = 5;
   int64 timestamp = 6;
+  string producer_id = 7;
 }
 
 message VideoUploadResponse {

@@ -1,24 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "c:\\Users\\Rafael\\OneDrive\\Documents\\Code\\STDISCM\\PS3\\stdiscm-PS3\\stdiscm-PS3.csproj": {}
+    "C:\\Users\\Renzel\\Desktop\\DLSU\\YEAR4\\STDISCM\\stdiscm-PS3\\stdiscm-PS3.csproj": {}
   },
   "projects": {
-    "c:\\Users\\Rafael\\OneDrive\\Documents\\Code\\STDISCM\\PS3\\stdiscm-PS3\\stdiscm-PS3.csproj": {
+    "C:\\Users\\Renzel\\Desktop\\DLSU\\YEAR4\\STDISCM\\stdiscm-PS3\\stdiscm-PS3.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "c:\\Users\\Rafael\\OneDrive\\Documents\\Code\\STDISCM\\PS3\\stdiscm-PS3\\stdiscm-PS3.csproj",
+        "projectUniqueName": "C:\\Users\\Renzel\\Desktop\\DLSU\\YEAR4\\STDISCM\\stdiscm-PS3\\stdiscm-PS3.csproj",
         "projectName": "stdiscm-PS3",
-        "projectPath": "c:\\Users\\Rafael\\OneDrive\\Documents\\Code\\STDISCM\\PS3\\stdiscm-PS3\\stdiscm-PS3.csproj",
-        "packagesPath": "C:\\Users\\Rafael\\.nuget\\packages\\",
-        "outputPath": "c:\\Users\\Rafael\\OneDrive\\Documents\\Code\\STDISCM\\PS3\\stdiscm-PS3\\obj\\",
+        "projectPath": "C:\\Users\\Renzel\\Desktop\\DLSU\\YEAR4\\STDISCM\\stdiscm-PS3\\stdiscm-PS3.csproj",
+        "packagesPath": "C:\\Users\\Renzel\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\Renzel\\Desktop\\DLSU\\YEAR4\\STDISCM\\stdiscm-PS3\\obj\\",
         "projectStyle": "PackageReference",
-        "fallbackFolders": [
-          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
-        ],
         "configFilePaths": [
-          "C:\\Users\\Rafael\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config"
+          "C:\\Users\\Renzel\\AppData\\Roaming\\NuGet\\NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net9.0"
@@ -48,9 +44,22 @@
         "net9.0": {
           "targetAlias": "net9.0",
           "dependencies": {
+            "Google.Protobuf": {
+              "target": "Package",
+              "version": "[3.27.0, )"
+            },
             "Grpc.AspNetCore": {
               "target": "Package",
               "version": "[2.64.0, )"
+            },
+            "Grpc.Tools": {
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[2.64.0, )"
+            },
+            "System.Resources.Extensions": {
+              "target": "Package",
+              "version": "[8.0.0, )"
             }
           },
           "imports": [
@@ -72,7 +81,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.307/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.306/PortableRuntimeIdentifierGraph.json"
         }
       }
     }
